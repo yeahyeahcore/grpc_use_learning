@@ -3,6 +3,8 @@ package grpc
 import (
 	"net"
 
+	grpc_controller "gitlab.doslab.ru/sell-and-buy/sb-delivery/internal/interface/controller/grpc"
+
 	"github.com/sirupsen/logrus"
 	"github.com/yeahyeahcore/grpc_tutor/api"
 	"google.golang.org/grpc"
@@ -12,15 +14,18 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )
 
+// Deps ...
 type Deps struct {
-	LocationHandler api.LocationServer
+	LocationController *grpc_controller.LocationController
 }
 
+// Server ...
 type Server struct {
 	Logger *logrus.Entry
-	grpc *grpc.Server
+	grpc   *grpc.Server
 }
 
+// New returns new instance of gRPC server
 func New(logger *logrus.Logger) *Server {
 	grpcLogger := logrus.NewEntry(logger)
 
@@ -34,11 +39,12 @@ func New(logger *logrus.Logger) *Server {
 	))
 
 	return &Server{
-		grpc: grpc.NewServer(grpcStreamInterceptor, grpcUnaryInterceptor),
+		grpc:   grpc.NewServer(grpcStreamInterceptor, grpcUnaryInterceptor),
 		Logger: grpcLogger,
 	}
 }
 
+// Listen requests
 func (receiver *Server) Listen(address string) error {
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -52,12 +58,14 @@ func (receiver *Server) Listen(address string) error {
 	return nil
 }
 
+// Register gRPC controllers
 func (receiver *Server) Register(deps Deps) *Server {
-	api.RegisterLocationServer(receiver.grpc, deps.LocationHandler)
+	api.RegisterLocationServer(receiver.grpc, deps.LocationController)
 
 	return receiver
 }
 
+// Stop gRPC server
 func (receiver *Server) Stop() {
 	receiver.grpc.GracefulStop()
 }

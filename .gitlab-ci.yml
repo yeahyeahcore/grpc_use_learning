@@ -1,0 +1,3 @@
+include:
+  - project: 'sell-and-buy/sb-common-model'
+    file: '.gitlab-ci.yml'
